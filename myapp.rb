@@ -9,7 +9,6 @@ require './models'
 CLIENT_ID = ENV['GH_BASIC_CLIENT_ID']
 CLIENT_SECRET = ENV['GH_BASIC_SECRET_ID']
 logger = Logger.new('myapp.log', 'view')
-DataMapper::Logger.new($stdout, :debug)
 
 class MyApp < Sinatra::Base
 
@@ -66,14 +65,15 @@ class MyApp < Sinatra::Base
         :accept => :json
       }
     )
-    email = JSON.parse(result)['email']
-    user = User.first_or_create(:email => email, :session_id => email)
-    token = UserAccessToken.create({
+    user_login = JSON.parse(result)['login']
+    user = User.first_or_create(:login => user_login, :session_id => user_login)
+    UserAccessToken.create({
       :access_token => access_token,
       :from => 'github',
       :user => user
     })
-    session[:session_id] = user[:session_id]
+    session[:session_id] = user.session_id
+    session[:login] = user.login
   end
 
 end
