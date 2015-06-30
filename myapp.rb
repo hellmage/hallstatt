@@ -2,11 +2,13 @@ require "rubygems"
 require "sinatra/base"
 require 'rest-client'
 require 'json'
+require 'logger'
 
 require './models'
 
 CLIENT_ID = ENV['GH_BASIC_CLIENT_ID']
 CLIENT_SECRET = ENV['GH_BASIC_SECRET_ID']
+logger = Logger.new('myapp.log', 'view')
 
 class MyApp < Sinatra::Base
 
@@ -40,6 +42,7 @@ class MyApp < Sinatra::Base
     session_code = request.env['rack.request.query_hash']['code']
 
     # ... and POST it back to GitHub
+    logger.debug('making request to get access_token with #{session_code}')
     result = RestClient.post(
       'https://github.com/login/oauth/access_token',
       {
@@ -54,6 +57,7 @@ class MyApp < Sinatra::Base
     access_token = JSON.parse(result)['access_token']
 
     # send request to github to get user information
+    logger.debug('making request to get user with #{access_token}')
     result = RestClient.get(
       'http://api.github.com/user',
       {
