@@ -25,7 +25,7 @@ class MyApp < Sinatra::Base
   get '/' do
     if !authenticate?
       erb :index, :locals => {
-        :scope => ['user', 'repo'],
+        :scopes => ['user', 'repo'].join(','),
         :client_id => CLIENT_ID
       }
     else
