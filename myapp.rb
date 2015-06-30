@@ -59,7 +59,7 @@ class MyApp < Sinatra::Base
     # send request to github to get user information
     logger.debug('making request to get user with #{access_token}')
     result = RestClient.get(
-      'http://api.github.com/user',
+      'https://api.github.com/user',
       {
         :params => {:access_token => access_token},
         :accept => :json
