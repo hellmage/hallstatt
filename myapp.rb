@@ -9,6 +9,7 @@ require './models'
 CLIENT_ID = ENV['GH_BASIC_CLIENT_ID']
 CLIENT_SECRET = ENV['GH_BASIC_SECRET_ID']
 logger = Logger.new('myapp.log', 'view')
+DataMapper::Logger.new($stdout, :debug)
 
 class MyApp < Sinatra::Base
 
@@ -72,6 +73,7 @@ class MyApp < Sinatra::Base
       :from => 'github',
       :user => user
     })
+    session[:session_id] = user[:session_id]
   end
 
 end
