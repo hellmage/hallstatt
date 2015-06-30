@@ -1,0 +1,11 @@
+source 'https://rubygems.org/'
+#source 'https://ruby.taobao.org/'
+
+gem 'sinatra'
+gem 'data_mapper'
+gem 'json'
+gem 'rest-client'
+gem 'dm-sqlite-adapter'
+gem 'bcrypt'
+gem 'shotgun'
+gem 'warden'
