@@ -15,8 +15,7 @@ class MyApp < Sinatra::Base
   use Rack::Session::Pool, :cookie_only => false
 
   def authenticate?
-    session_id = session[:session_id]
-    @user = User.get(:session_id => session_id)
+    @user = User.first(:session_id => session[:session_id])
     if @user
       true
     else
