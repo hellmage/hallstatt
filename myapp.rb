@@ -25,14 +25,18 @@ class MyApp < Sinatra::Base
     logger.info 'user_session: #{user_session}'
     user = User.first(:session_id => user_session)
 
-    if !user
+    if !user  # unauthorized guest visit
       erb :index, :locals => {
         :scopes => ['user', 'repo'].join(','),
         :client_id => CLIENT_ID
       }
-    else
+    else  # authorized user
+      # get the list of repositories
+      result = RestClient.get 'https://api.github.com/user/repos'
+      repositories = JSON.parse(result)
       erb :index, :locals => {
-        :user => user
+        :user => user,
+        :repositories => repositories,
       }
     end
   end
@@ -44,7 +48,7 @@ class MyApp < Sinatra::Base
     # ... and POST it back to GitHub
     logger.info 'making request to get access_token with #{session_code}'
     result = RestClient.post(
-      'https://github.com/login/oauth/access_token',
+      'https://api.github.com/login/oauth/access_token',
       {
         :client_id => CLIENT_ID,
         :client_secret => CLIENT_SECRET,

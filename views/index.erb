@@ -9,6 +9,13 @@
     <p>
       You are <b><%= user.login %></b>, right? Nice to meet you!
     </p>
+    <p>
+      <ul>
+        <% for repo in repositories %>
+          <li><%= repo.name %></li>
+        <% end %>
+      </ul>
+    </p>
     <% elsif %>
     <p>
       We're going to now talk to the GitHub API. Ready?
