@@ -32,7 +32,13 @@ class MyApp < Sinatra::Base
       }
     else  # authorized user
       # get the list of repositories
-      result = RestClient.get 'https://api.github.com/user/repos'
+      result = RestClient.get(
+        'https://api.github.com/user/repos',
+        {
+          :params => {:access_token => user.user_access_token[0].access_token},
+          :accept => :json
+        }
+      )
       repositories = JSON.parse(result)
       erb :index, :locals => {
         :user => user,
