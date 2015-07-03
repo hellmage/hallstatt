@@ -3,35 +3,36 @@ require "sinatra/base"
 require 'rest-client'
 require 'json'
 require 'logger'
+require 'byebug'
 
 require './models'
 
 CLIENT_ID = ENV['GH_BASIC_CLIENT_ID']
 CLIENT_SECRET = ENV['GH_BASIC_SECRET_ID']
-logger = Logger.new('myapp.log', 'view')
+logger = Logger.new 'myapp.log'
+logger.level = Logger::DEBUG
 
 class MyApp < Sinatra::Base
 
-  use Rack::Session::Pool, :cookie_only => false
-
-  def authenticate?
-    @user = User.first(:session_id => session[:session_id])
-    if @user
-      true
-    else
-      false
-    end
-  end
+  use Rack::Session::Cookie, {
+    :secret => ENV['GH_COOKIE_SECRET'],
+    :key => 'rack.session',
+    :path => '/'
+  }
 
   get '/' do
-    if !authenticate?
+    user_session = session[:user_session]
+    logger.info 'user_session: #{user_session}'
+    user = User.first(:session_id => user_session)
+
+    if !user
       erb :index, :locals => {
         :scopes => ['user', 'repo'].join(','),
         :client_id => CLIENT_ID
       }
     else
       erb :index, :locals => {
-        :user => @user
+        :user => user
       }
     end
   end
@@ -41,7 +42,7 @@ class MyApp < Sinatra::Base
     session_code = request.env['rack.request.query_hash']['code']
 
     # ... and POST it back to GitHub
-    logger.debug('making request to get access_token with #{session_code}')
+    logger.info 'making request to get access_token with #{session_code}'
     result = RestClient.post(
       'https://github.com/login/oauth/access_token',
       {
@@ -56,7 +57,7 @@ class MyApp < Sinatra::Base
     access_token = JSON.parse(result)['access_token']
 
     # send request to github to get user information
-    logger.debug('making request to get user with #{access_token}')
+    logger.info 'making request to get user with #{access_token}'
     result = RestClient.get(
       'https://api.github.com/user',
       {
@@ -65,14 +66,22 @@ class MyApp < Sinatra::Base
       }
     )
     user_login = JSON.parse(result)['login']
-    user = User.first_or_create(:login => user_login, :session_id => user_login)
-    UserAccessToken.create({
-      :access_token => access_token,
-      :from => 'github',
-      :user => user
-    })
-    session[:session_id] = user.session_id
-    session[:login] = user.login
+    user = User.first(:login => user_login)
+    if !user
+      logger.info 'Found user: #{login}'
+      user = User.create(:login => user_login, :session_id => user_login)
+      UserAccessToken.create({
+        :access_token => access_token,
+        :from => 'github',
+        :user => user
+      })
+    end
+    session[:user_session] = user.session_id
+    redirect to('/')
+  end
+
+  get '/logout' do
+    session.clear
   end
 
 end
